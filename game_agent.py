@@ -34,8 +34,8 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    free_fields = game.get_blank_spaces()
+    return len(free_fields)
 
 
 def custom_score_2(game, player):

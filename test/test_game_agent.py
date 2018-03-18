@@ -24,6 +24,12 @@ class IsolationTest(unittest.TestCase):
         # TODO: All methods must start with "test_"
         self.fail("Hello, World!")
 
+    def test_custom_score(self):
+        game = self.game
+        player = self.player1
+        evaluate_game = game_agent.custom_score(game, player)
+        self.assertTrue(evaluate_game == 49)
+
     def test_minimax_get_move(self):
         # TODO: All methods must start with "test_"
         game = self.game
