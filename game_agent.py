@@ -213,6 +213,15 @@ class MinimaxPlayer(IsolationPlayer):
             raise SearchTimeout()
 
         # TODO: finish this function!
+        best_move = None
+        value = (float("-inf"), best_move)
+        if terminal_test(game):
+            return -1
+        else:
+            for move in game.get_legal_moves():
+                value = max(value, (min_value(game.forecast_move(move)), move), key=lambda x: x[0])
+                return value[1]
+        # Remove this
         raise NotImplementedError
 
 
