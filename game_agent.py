@@ -209,7 +209,7 @@ class MinimaxPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
+        if self.time_left < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
         # TODO: finish this function!
