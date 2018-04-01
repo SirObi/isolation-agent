@@ -267,11 +267,14 @@ class AlphaBetaPlayer(IsolationPlayer):
         # Initialize the best move so that this function returns something
         # in case the search fails due to timeout
         best_move = (-1, -1)
+        layer = 0
 
         try:
             # The try/except block will automatically catch the exception
             # raised when the timer is about to expire.
-            return self.alphabeta(game, self.search_depth)
+            while self.time_left() > self.TIMER_THRESHOLD:
+                best_move = self.alphabeta(game, layer)
+                layer += 1
 
         except SearchTimeout:
             pass  # Handle any actions required after timeout as needed
