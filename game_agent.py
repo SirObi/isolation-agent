@@ -264,56 +264,86 @@ class AlphaBetaPlayer(IsolationPlayer):
         """
         self.time_left = time_left
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        # Initialize the best move so that this function returns something
+        # in case the search fails due to timeout
+        best_move = (-1, -1)
+
+        try:
+            # The try/except block will automatically catch the exception
+            # raised when the timer is about to expire.
+            return self.alphabeta(game, self.search_depth)
+
+        except SearchTimeout:
+            pass  # Handle any actions required after timeout as needed
+
+        # Return the best move from the last completed search iteration
+        return best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
-        """Implement depth-limited minimax search with alpha-beta pruning as
-        described in the lectures.
-
-        This should be a modified version of ALPHA-BETA-SEARCH in the AIMA text
-        https://github.com/aimacode/aima-pseudocode/blob/master/md/Alpha-Beta-Search.md
-
-        **********************************************************************
-            You MAY add additional methods to this class, or define helper
-                 functions to implement the required functionality.
-        **********************************************************************
-
-        Parameters
-        ----------
-        game : isolation.Board
-            An instance of the Isolation game `Board` class representing the
-            current game state
-
-        depth : int
-            Depth is an integer representing the maximum number of plies to
-            search in the game tree before aborting
-
-        alpha : float
-            Alpha limits the lower bound of search on minimizing layers
-
-        beta : float
-            Beta limits the upper bound of search on maximizing layers
-
-        Returns
-        -------
-        (int, int)
-            The board coordinates of the best move found in the current search;
-            (-1, -1) if there are no legal moves
-
-        Notes
-        -----
-            (1) You MUST use the `self.score()` method for board evaluation
-                to pass the project tests; you cannot call any other evaluation
-                function directly.
-
-            (2) If you use any helper functions (e.g., as shown in the AIMA
-                pseudocode) then you must copy the timer check into the top of
-                each helper function or else your agent will timeout during
-                testing.
-        """
+        """ Given a game state, returns best move after searching to the allowed depth """
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        current_best_move = (-1, -1)
+        current_best_score = float("-inf")
+        for move in game.get_legal_moves():
+            score = self.assess_move(game, move, depth, alpha, beta)
+            if score > current_best_score:
+                current_best_score = score
+                current_best_move = move
+            if current_best_score > alpha:
+                alpha = current_best_score
+        return current_best_move
+
+    def min_value(self, position, depth, parent_node_preference):
+        """ Return the value of child node with lowest value"""
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        remaining_depth = depth - 1
+        if remaining_depth < 1:
+            return self.score(position, position.inactive_player)
+        current_lowest_value = float('inf')
+        alpha = parent_node_preference
+
+        for move in position.get_legal_moves():
+            value = min(current_lowest_value, self.max_value(position.forecast_move(move), remaining_depth, current_lowest_value))
+            # If the value is smaller than the value of node currently preferred
+            # by parent node MAX, break loop (i.e. ignore (prune) remaining nodes)
+            if value <= alpha:
+                return value
+            if value < current_lowest_value:
+                current_lowest_value = value
+        return current_lowest_value
+
+    def max_value(self, position, depth, parent_node_preference):
+        """ Return the value of child node with highest value"""
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        remaining_depth = depth - 1
+        if remaining_depth < 1:
+            return self.score(position, position.active_player)
+        current_highest_value = float('-inf')
+        beta = parent_node_preference
+
+        for move in position.get_legal_moves():
+            value = max(current_highest_value, self.min_value(position.forecast_move(move), remaining_depth, current_highest_value))
+            # If the value is larger than the value of node currently preferred
+            # by parent node MIN, break loop (i.e. ignore (prune) remaining nodes)
+            if value >= beta:
+                return value
+            if value > current_highest_value:
+                current_highest_value = value
+        return current_highest_value
+
+    def terminal_test(self, game, remaining_depth):
+        """ Return True if node terminal or max depth reached """
+        if game.get_legal_moves() and remaining_depth > 0:
+            return False
+        else:
+            return True
+
+    def assess_move(self, game, move, depth, alpha, beta):
+        position = game.forecast_move(move)
+        return self.min_value(position, depth, alpha)
