@@ -295,7 +295,7 @@ class AlphaBetaPlayer(IsolationPlayer):
                 alpha = current_best_score
         return current_best_move
 
-    def min_value(self, position, depth, parent_node_preference):
+    def min_value(self, position, depth, alpha, beta):
         """ Return the value of child node with lowest value"""
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
@@ -304,19 +304,18 @@ class AlphaBetaPlayer(IsolationPlayer):
         if remaining_depth < 1:
             return self.score(position, position.inactive_player)
         current_lowest_value = float('inf')
-        alpha = parent_node_preference
 
         for move in position.get_legal_moves():
-            value = min(current_lowest_value, self.max_value(position.forecast_move(move), remaining_depth, current_lowest_value))
-            # If the value is smaller than the value of node currently preferred
+            current_lowest_value = min(current_lowest_value, self.max_value(position.forecast_move(move), remaining_depth, alpha, beta))
+            # If the value is smaller than or equal to the value of node currently preferred
             # by parent node MAX, break loop (i.e. ignore (prune) remaining nodes)
-            if value <= alpha:
-                return value
-            if value < current_lowest_value:
-                current_lowest_value = value
+            if current_lowest_value <= alpha:
+                return current_lowest_value
+            if current_lowest_value < beta:
+                beta = current_lowest_value
         return current_lowest_value
 
-    def max_value(self, position, depth, parent_node_preference):
+    def max_value(self, position, depth, alpha, beta):
         """ Return the value of child node with highest value"""
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
@@ -325,16 +324,15 @@ class AlphaBetaPlayer(IsolationPlayer):
         if remaining_depth < 1:
             return self.score(position, position.active_player)
         current_highest_value = float('-inf')
-        beta = parent_node_preference
 
         for move in position.get_legal_moves():
-            value = max(current_highest_value, self.min_value(position.forecast_move(move), remaining_depth, current_highest_value))
-            # If the value is larger than the value of node currently preferred
+            current_highest_value = max(current_highest_value, self.min_value(position.forecast_move(move), remaining_depth, alpha, beta))
+            # If the value is larger than or equal to the value of node currently preferred
             # by parent node MIN, break loop (i.e. ignore (prune) remaining nodes)
-            if value >= beta:
-                return value
-            if value > current_highest_value:
-                current_highest_value = value
+            if current_highest_value >= beta:
+                return current_highest_value
+            if current_highest_value > alpha:
+                alpha = current_highest_value
         return current_highest_value
 
     def terminal_test(self, game, remaining_depth):
@@ -346,4 +344,4 @@ class AlphaBetaPlayer(IsolationPlayer):
 
     def assess_move(self, game, move, depth, alpha, beta):
         position = game.forecast_move(move)
-        return self.min_value(position, depth, alpha)
+        return self.min_value(position, depth, alpha, beta)
